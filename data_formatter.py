@@ -52,8 +52,8 @@ def getTrailingPrice(src, idx, key = 'PRICE'):
 
 
 def intlogspace(max=120, n=10):
-    ns = np.logspace(0, 1, base=max+1, num=n).tolist()
-    return map(lambda n: math.floor(n), ns)
+    ns = np.logspace(0, 1, base=max, num=n).tolist()
+    return list(map(lambda n: math.floor(n), ns))
 
 
 def main(args, logLevel):
@@ -81,29 +81,29 @@ def main(args, logLevel):
 
     output = []
     output_idx = 0
+    trailing_deltas = intlogspace()
 
     while now <= end:
         previous_idx = max(0, output_idx - 1)
-
-        trailing_deltas = intlogspace()
         trailing_idxs = map(lambda n: math.floor(output_idx - n), trailing_deltas)
         result = list(filter(lambda t: t['TIME'] == now, formatted_data))
 
         if result:
             new_entry = result[0]
         else:
-            last_result = dict(output[previous_idx])
-            last_result['NUM_TRADES'] = 0
-            last_result['VOLUME'] = 0
-            last_result['TIME'] = now
-            new_entry = last_result
+            last_entry = safe_list_get(output, previous_idx, None)
+
+            if last_entry is not None:
+                new_entry = dict(last_entry)
+                new_entry['NUM_TRADES'] = 0
+                new_entry['VOLUME'] = 0
+                new_entry['TIME'] = now
 
         trailing_price_entries = getTrailingPrices(
             trailing_idxs,
             "TRAILING_PRICE",
             lambda i: getTrailingPrice(output, i)
         )
-
         new_entry.update(trailing_price_entries)
 
         logging.info("Adding entry: " + str(new_entry['TIME']))
@@ -111,11 +111,15 @@ def main(args, logLevel):
         now += datetime.timedelta(minutes=WINDOW_INCREMENT_MINUTES)
         output_idx += 1
 
+    # Just get chunk from output that we know has values
+
     for idx, val in enumerate(output):
         if idx+1 < len(output):
             val['PRICE'] = output[idx+1]['PRICE']
         else:
             val['PRICE'] = None
+
+    output = output[trailing_deltas[-1]:-2]
 
     # Output data
     output_data = pd.DataFrame(output)

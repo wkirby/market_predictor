@@ -6,10 +6,10 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 
 # Import data
-data = pd.read_csv('../01_data/data_stocks.csv')
+data = pd.read_csv('data/coinbase_subset_formatted.csv')
 
 # Drop date variable
-data = data.drop(['DATE'], 1)
+data = data.drop(['TIME', 'NUM_TRADES', 'VOLUME'], 1)
 
 # Dimensions of dataset
 n = data.shape[0]
@@ -39,7 +39,7 @@ X_test = data_test[:, 1:]
 y_test = data_test[:, 0]
 
 # Number of stocks in training data
-n_stocks = X_train.shape[1]
+n_prices = X_train.shape[1]
 
 # Neurons
 n_neurons_1 = 1024
@@ -51,7 +51,7 @@ n_neurons_4 = 128
 net = tf.InteractiveSession()
 
 # Placeholder
-X = tf.placeholder(dtype=tf.float32, shape=[None, n_stocks])
+X = tf.placeholder(dtype=tf.float32, shape=[None, n_prices])
 Y = tf.placeholder(dtype=tf.float32, shape=[None])
 
 # Initializers
@@ -60,7 +60,7 @@ weight_initializer = tf.variance_scaling_initializer(mode="fan_avg", distributio
 bias_initializer = tf.zeros_initializer()
 
 # Hidden weights
-W_hidden_1 = tf.Variable(weight_initializer([n_stocks, n_neurons_1]))
+W_hidden_1 = tf.Variable(weight_initializer([n_prices, n_neurons_1]))
 bias_hidden_1 = tf.Variable(bias_initializer([n_neurons_1]))
 W_hidden_2 = tf.Variable(weight_initializer([n_neurons_1, n_neurons_2]))
 bias_hidden_2 = tf.Variable(bias_initializer([n_neurons_2]))
@@ -105,7 +105,7 @@ mse_train = []
 mse_test = []
 
 # Run
-epochs = 10
+epochs = 100
 for e in range(epochs):
 
     # Shuffle training data
