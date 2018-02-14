@@ -59,6 +59,7 @@ def intlogspace(max=120, n=10):
 def main(args, logLevel):
     logging.basicConfig(format="%(levelname)s: %(message)s", level=loglevel)
 
+    # READ CSV
     data = pd.read_csv(args.input)
 
     # FORMAT DATA
@@ -108,6 +109,7 @@ def main(args, logLevel):
         now += datetime.timedelta(minutes=WINDOW_INCREMENT_MINUTES)
         output_idx += 1
 
+    # Output data
     output_data = pd.DataFrame(output)
     logging.info("Output to " + args.output)
     output_data.to_csv(args.output, index=False)
