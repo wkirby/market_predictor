@@ -23,7 +23,7 @@ def roundTime(dt=None, roundTo=60):
     roundTo : Closest number of seconds to round to, default 1 minute.
     Author: Thierry Husson 2012 - Use it as you want but don't blame me.
     """
-    if dt == None : dt = datetime.datetime.now()
+    if dt is None: dt = datetime.datetime.now()
     seconds = (dt.replace(tzinfo=None) - dt.min).seconds
     rounding = (seconds+roundTo/2) // roundTo * roundTo
     return dt + datetime.timedelta(0,rounding-seconds,-dt.microsecond)
@@ -81,8 +81,10 @@ def main(args, logLevel):
 
     output = []
     output_idx = 0
+
     while now <= end:
         previous_idx = max(0, output_idx - 1)
+
         trailing_deltas = intlogspace()
         trailing_idxs = map(lambda n: math.floor(output_idx - n), trailing_deltas)
         result = list(filter(lambda t: t['TIME'] == now, formatted_data))
@@ -108,6 +110,12 @@ def main(args, logLevel):
         output.append(new_entry)
         now += datetime.timedelta(minutes=WINDOW_INCREMENT_MINUTES)
         output_idx += 1
+
+    for idx, val in enumerate(output):
+        if idx+1 < len(output):
+            val['PRICE'] = output[idx+1]['PRICE']
+        else:
+            val['PRICE'] = None
 
     # Output data
     output_data = pd.DataFrame(output)
